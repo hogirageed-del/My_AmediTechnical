@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATI | پۆرتاڵێ پێشکەفتی یێ گازندان</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f4f7fe; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .sidebar-gradient { background: #111827; }
+        .active-link { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .nav-item { transition: all 0.3s; display: flex; align-items: center; padding: 0.8rem 1rem; border-radius: 12px; color: #9ca3af; margin-bottom: 0.5rem; }
+        .nav-item:hover:not(.active-link) { background-color: rgba(255, 255, 255, 0.05); color: white; }
+        .stat-card { transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .priority-high { border-right: 5px solid #ef4444; }
+        .priority-medium { border-right: 5px solid #f59e0b; }
+        .priority-low { border-right: 5px solid #10b981; }
+    </style>
+</head>
+<body class="text-right">
+
+    <!-- Login/Register Section -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen p-4">
+        <div class="glass-card w-full max-w-md p-10 rounded-[2rem] shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="bg-blue-600 w-20 h-20 rounded-2xl rotate-3 flex items-center justify-center mx-auto mb-6 text-white text-3xl shadow-xl">
+                    <i class="fas fa-university -rotate-3"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">پەیمانگەها تەکنیکی ئامێدیێ</h1>
+                <p class="text-slate-500 mt-1">سیستەمێ گازندە و پێشنیاران</p>
+            </div>
+
+            <div id="login-form" class="space-y-4">
+                <input type="text" id="l-user" placeholder="ناڤێ بکارهێنەری" class="w-full px-4 py-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="l-pass" placeholder="پاسسۆرد" class="w-full px-4 py-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition">چوونەژوورێ</button>
+                <p class="text-center mt-6 text-sm">حسابا تە نینە؟ <a href="javascript:void(0)" onclick="toggleAuth(true)" class="text-blue-600 font-bold">ئێکێ چێکە</a></p>
+            </div>
+
+            <div id="register-form" class="hidden space-y-4">
+                <input type="text" id="r-user" placeholder="ناڤێ تە یێ تەمام" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none">
+                <input type="password" id="r-pass" placeholder="پاسسۆرد" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="r-role" onchange="updateDeptList()" class="w-full px-4 py-3 border rounded-xl text-blue-600 font-bold">
+                        <option value="قوتابی">قوتابی</option>
+                        <option value="مامۆستا">مامۆستا</option>
+                        <option value="فەرمانبەر">فەرمانبەر</option>
+                    </select>
+                    <select id="r-dept" class="w-full px-4 py-3 border rounded-xl"></select>
+                </div>
+                <button onclick="handleRegister()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl">تۆمارکرن</button>
+                <p class="text-center mt-4 text-sm"><a href="javascript:void(0)" onclick="toggleAuth(false)" class="text-blue-600 font-bold">داخل ببە</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="main-dashboard" class="hidden flex h-screen overflow-hidden">
+        <aside class="sidebar-gradient w-72 text-white flex flex-col shrink-0">
+            <div class="p-8 text-center border-b border-slate-800">
+                <img id="side-avatar" src="" class="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-blue-500 p-1">
+                <h3 id="user-display-side" class="font-bold text-lg"></h3>
+                <p id="role-display-side" class="text-xs text-slate-400 mt-1"></p>
+            </div>
+            <nav class="flex-1 p-6">
+                <button onclick="showSection('home')" id="btn-home" class="nav-item w-full"><i class="fas fa-home ml-3"></i> سەرەکی</button>
+                <button onclick="showSection('my-complaints')" id="btn-my-complaints" class="nav-item w-full"><i class="fas fa-file-invoice ml-3"></i> گازندێن من</button>
+                <button onclick="showSection('profile')" id="btn-profile" class="nav-item w-full"><i class="fas fa-user ml-3"></i> پڕۆفایل</button>
+                <button id="btn-admin" onclick="showSection('admin')" class="hidden nav-item w-full text-amber-500 font-bold"><i class="fas fa-user-shield ml-3"></i> کارگێڕی (Admin)</button>
+            </nav>
+            <div class="p-6"><button onclick="logout()" class="w-full p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition font-bold">دەرکەفتن</button></div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-10 py-6 flex justify-between items-center border-b">
+                <div class="text-right">
+                    <h2 class="text-xl font-bold text-slate-800">بخێر بێی، <span id="user-display"></span></h2>
+                    <p id="dept-display" class="text-slate-500 text-xs"></p>
+                </div>
+                <div class="relative cursor-pointer" onclick="toggleNotifs()">
+                    <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><i class="fas fa-bell"></i></div>
+                    <div id="notif-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>
+                    <div id="notif-box" class="hidden absolute right-0 mt-4 w-72 bg-white shadow-2xl rounded-2xl border p-4 z-50">
+                        <h4 class="font-bold text-sm border-b pb-2 mb-2">هایداریێن نوی</h4>
+                        <div id="notif-list" class="text-xs space-y-2"></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-10">
+                <!-- Stats Grid (Visible for both User & Admin) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="stat-card bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-5">
+                        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-copy"></i></div>
+                        <div><p class="text-slate-400 text-sm">کۆم گشتی</p><h3 class="text-2xl font-bold" id="card-total">0</h3></div>
+                    </div>
+                    <div class="stat-card bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-5">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-check-double"></i></div>
+                        <div><p class="text-slate-400 text-sm">بەرسڤدای</p><h3 class="text-2xl font-bold" id="card-solved">0</h3></div>
+                    </div>
+                    <div class="stat-card bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-5">
+                        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-hourglass-half"></i></div>
+                        <div><p class="text-slate-400 text-sm">ماندی</p><h3 class="text-2xl font-bold" id="card-pending">0</h3></div>
+                    </div>
+                </div>
+
+                <section id="sec-home">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
+                        <h3 class="font-bold text-lg mb-6">نڤیسینا گازندا نوی</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <select id="c-priority" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none"><option value="priority-low">ئاسایی</option><option value="priority-medium">بلەز</option><option value="priority-high">گەلەک بلەز</option></select>
+                            <select id="c-type" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none"><option value="زانستی">زانستی</option><option value="کارگێڕی">کارگێڕی</option><option value="خزمەتگوزاری">خزمەتگوزاری</option></select>
+                        </div>
+                        <input type="text" id="c-subject" placeholder="بابەت..." class="w-full p-4 bg-slate-50 border rounded-2xl mb-4 outline-none">
+                        <textarea id="c-msg" rows="4" placeholder="تێبینی..." class="w-full p-4 bg-slate-50 border rounded-2xl mb-4 outline-none"></textarea>
+                        <button onclick="sendComplaint()" class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold shadow-lg">ناردن</button>
+                    </div>
+                </section>
+
+                <section id="sec-my-complaints" class="hidden"><div class="grid grid-cols-1 gap-6" id="complaints-list"></div></section>
+                <section id="sec-admin" class="hidden"><div class="space-y-4" id="admin-list"></div></section>
+                <section id="sec-profile" class="hidden text-center"><div id="prof-content" class="bg-white p-10 rounded-[2.5rem] shadow-xl inline-block min-w-[300px]"></div></section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const depts = ["IT", "کارگێڕی کار", "تەندروستی", "گەشتوگوزار", "راگریا پەیمانگەهێ"];
+
+        function toast(title, icon = 'success') {
+            Swal.fire({ title, icon, confirmButtonText: 'باشە', confirmButtonColor: '#2563eb', customClass: { popup: 'rounded-3xl' } });
+        }
+
+        const getAllUsers = () => {
+            let users = [];
+            for (let i = 0; i < localStorage.length; i++){
+                let key = localStorage.key(i);
+                if(key.startsWith('ati_user_')) users.push(JSON.parse(localStorage.getItem(key)));
+            }
+            return users;
+        };
+
+        const updateUser = (data) => localStorage.setItem(`ati_user_${data.u}`, JSON.stringify(data));
+
+        function updateDeptList() {
+            const deptSelect = document.getElementById('r-dept');
+            deptSelect.innerHTML = "";
+            depts.forEach(d => { let opt = document.createElement('option'); opt.value = d; opt.innerText = d; deptSelect.appendChild(opt); });
+        }
+
+        function toggleAuth(isReg) {
+            document.getElementById('login-form').classList.toggle('hidden', isReg);
+            document.getElementById('register-form').classList.toggle('hidden', !isReg);
+            if(isReg) updateDeptList();
+        }
+
+        function handleRegister() {
+            const u = document.getElementById('r-user').value.trim();
+            const p = document.getElementById('r-pass').value.trim();
+            if(!u || !p) return toast("خانان تژی بکە", "error");
+            updateUser({ u, p, r: document.getElementById('r-role').value, d: document.getElementById('r-dept').value, img: `https://ui-avatars.com/api/?name=${u}&background=random`, complaints: [], notifications: [] });
+            toast("تۆمارکرن سەرکەفتی بوو"); toggleAuth(false);
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('l-user').value.trim();
+            const p = document.getElementById('l-pass').value.trim();
+            if(u === "admin" && p === "1234") {
+                sessionStorage.setItem('current_user', 'Admin');
+                initDashboard({ u: "Admin", r: "سەرپەرشتیار", d: "کارگێڕی", img: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png" });
+            } else {
+                const data = JSON.parse(localStorage.getItem(`ati_user_${u}`));
+                if(data && data.p === p) { sessionStorage.setItem('current_user', u); initDashboard(data); }
+                else toast("ناڤ یان پاسسۆرد خەلەتە", "error");
+            }
+        }
+
+        function initDashboard(data) {
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('user-display').innerText = data.u;
+            document.getElementById('user-display-side').innerText = data.u;
+            document.getElementById('role-display-side').innerText = data.r;
+            document.getElementById('dept-display').innerText = data.r + " | " + data.d;
+            document.getElementById('side-avatar').src = data.img;
+            
+            if(data.u === "Admin") {
+                document.getElementById('btn-admin').classList.remove('hidden');
+                document.getElementById('sec-home').classList.add('hidden'); // Admin logic
+                showSection('admin');
+            } else {
+                showSection('home');
+            }
+            refreshAllStats();
+        }
+
+        // --- ئەڤ فەکشنە هژماران بۆ ئەدمین و قوتابی نوژەن دکەت ---
+        function refreshAllStats() {
+            const uName = sessionStorage.getItem('current_user');
+            let total = 0, solved = 0, pending = 0;
+
+            if(uName === "Admin") {
+                const users = getAllUsers();
+                users.forEach(user => {
+                    user.complaints.forEach(c => {
+                        total++;
+                        if(c.status === "چارەسەربووی") solved++; else pending++;
+                    });
+                });
+            } else {
+                const data = JSON.parse(localStorage.getItem(`ati_user_${uName}`));
+                total = data.complaints.length;
+                solved = data.complaints.filter(c => c.status === "چارەسەربووی").length;
+                pending = total - solved;
+            }
+
+            document.getElementById('card-total').innerText = total;
+            document.getElementById('card-solved').innerText = solved;
+            document.getElementById('card-pending').innerText = pending;
+        }
+
+        function sendComplaint() {
+            const uName = sessionStorage.getItem('current_user');
+            const sub = document.getElementById('c-subject').value;
+            const msg = document.getElementById('c-msg').value;
+            if(!sub || !msg) return toast("خانان تژی بکە", "warning");
+
+            let data = JSON.parse(localStorage.getItem(`ati_user_${uName}`));
+            data.complaints.push({ id: Date.now(), sub, msg, priority: document.getElementById('c-priority').value, status: "ل چاڤدێریێ", date: new Date().toLocaleDateString() });
+            updateUser(data);
+            toast("هاتە ناردن");
+            refreshAllStats();
+        }
+
+        function loadAdminPanel() {
+            const list = document.getElementById('admin-list');
+            list.innerHTML = "";
+            getAllUsers().forEach(user => {
+                user.complaints.forEach(c => {
+                    const isSolved = c.status === "چارەسەربووی";
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-6 rounded-3xl border mb-4";
+                    div.innerHTML = `
+                        <div class="flex justify-between font-bold mb-2"><span>${c.sub}</span><span class="text-blue-500">${user.u}</span></div>
+                        <p class="text-sm text-slate-600 mb-4">${c.msg}</p>
+                        ${!isSolved ? `
+                            <div class="flex gap-2">
+                                <input type="text" id="rep-${c.id}" class="flex-1 border p-2 rounded-xl text-sm" placeholder="وەڵامدان...">
+                                <button onclick="adminReply('${user.u}', ${c.id})" class="bg-blue-600 text-white px-4 py-2 rounded-xl">ناردن</button>
+                            </div>
+                        ` : `<div class="text-emerald-600 text-sm font-bold">بەرسڤ دایە: ${c.adminReply}</div>`}
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        function adminReply(userName, id) {
+            const reply = document.getElementById(`rep-${id}`).value;
+            if(!reply) return;
+            let data = JSON.parse(localStorage.getItem(`ati_user_${userName}`));
+            let c = data.complaints.find(x => x.id == id);
+            c.status = "چارەسەربووی";
+            c.adminReply = reply;
+            data.notifications.push(`گازندا تە (${c.sub}) هاتە بەرسڤدان`);
+            updateUser(data);
+            toast("بەرسڤ هاتە ناردن");
+            refreshAllStats(); // Update Admin Counts
+            loadAdminPanel();
+        }
+
+        function showSection(sec) {
+            ['home', 'my-complaints', 'profile', 'admin'].forEach(s => {
+                if(document.getElementById(`sec-${s}`)) document.getElementById(`sec-${s}`).classList.add('hidden');
+                if(document.getElementById(`btn-${s}`)) document.getElementById(`btn-${s}`).classList.remove('active-link');
+            });
+            document.getElementById(`sec-${sec}`).classList.remove('hidden');
+            document.getElementById(`btn-${sec}`).classList.add('active-link');
+            if(sec === 'my-complaints') loadUserComplaints();
+            if(sec === 'admin') loadAdminPanel();
+            refreshAllStats();
+        }
+
+        function loadUserComplaints() {
+            const data = JSON.parse(localStorage.getItem(`ati_user_${sessionStorage.getItem('current_user')}`));
+            const list = document.getElementById('complaints-list');
+            list.innerHTML = data.complaints.map(c => `<div class="bg-white p-4 rounded-2xl border ${c.priority}"><b>${c.sub}</b><p class="text-sm">${c.msg}</p><i class="text-xs text-blue-500">${c.status}</i></div>`).join('');
+        }
+
+        function toggleNotifs() { document.getElementById('notif-box').classList.toggle('hidden'); }
+        function logout() { sessionStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
